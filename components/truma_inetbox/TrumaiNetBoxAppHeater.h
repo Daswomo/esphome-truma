@@ -12,14 +12,14 @@ class TrumaiNetBoxAppHeater : public TrumaStausFrameResponseStorage<StatusFrameH
   void create_update_data(StatusFrame *response, uint8_t *response_len, uint8_t command_counter) override;
   void dump_data() const override;
   bool can_update() override;
-
   bool action_heater_room(uint8_t temperature, HeatingMode mode = HeatingMode::HEATING_MODE_OFF);
   bool action_heater_water(uint8_t temperature);
   bool action_heater_water(TargetTemp temperature);
-  bool action_heater_ventilation_test();
   bool action_heater_electric_power_level(uint16_t value);
   bool action_heater_energy_mix(EnergyMix energy_mix,
                                 ElectricPowerLevel el_power_level = ElectricPowerLevel::ELECTRIC_POWER_LEVEL_0);
+  bool action_heater_ventilation_test();
+  bool action_heater_ventilation_level(uint8_t level);   // <-- diese Zeile fehlt noch
 };
 
 }  // namespace truma_inetbox
