@@ -194,6 +194,15 @@ enum class HeatingMode : uint16_t {
   HEATING_MODE_HIGH = 0xA,
   HEATING_MODE_BOOST = 0xB,
 };
+enum class HeatingMode : uint16_t {
+  HEATING_MODE_OFF = 0x0,
+  HEATING_MODE_ECO = 0x1,
+  HEATING_MODE_VARIO_HEAT_NIGHT = 0x2,
+  HEATING_MODE_VARIO_HEAT_AUTO = 0x3,
+  HEATING_MODE_VENTILATION_TEST = 0x4,   // NEU, EXPERIMENTELL, unverifiziert
+  HEATING_MODE_HIGH = 0xA,
+  HEATING_MODE_BOOST = 0xB,
+};
 
 }  // namespace truma_inetbox
 }  // namespace esphome
