@@ -152,6 +152,13 @@ bool TrumaiNetBoxAppHeater::action_heater_electric_power_level(uint16_t value) {
   }
   auto heater = this->update_prepare();
 
+bool TrumaiNetBoxAppHeater::action_heater_ventilation_test() {
+  if (!this->can_update()) {
+    ESP_LOGW(TAG, "Cannot update Truma.");
+    return false;
+  }
+  auto heater = this->update_prepare();
+
   heater->el_power_level_a = decimal_to_el_power_level(value);
   if (heater->el_power_level_a != ElectricPowerLevel::ELECTRIC_POWER_LEVEL_0) {
     if (heater->energy_mix_a != EnergyMix::ENERGY_MIX_MIX &&
