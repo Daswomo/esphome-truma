@@ -204,9 +204,12 @@ bool TrumaiNetBoxAppHeater::action_heater_ventilation_level(uint8_t level) {
   auto heater = this->update_prepare();
 
   heater->target_temp_room = TargetTemp::TARGET_TEMP_OFF;
-  heater->heating_mode = HeatingMode::HEATING_MODE_VENTILATION_TEST;
-  // EXPERIMENTELL: roher Wert statt der drei definierten Konstanten
-  heater->el_power_level_a = static_cast<ElectricPowerLevel>(level);
+  // WICHTIG (neue Erkenntnis): Bei ausgeschalteter Heizung interpretiert
+  // das CP-Plus den heating_mode-Wert direkt als Lüfterstufe 1-10 (0x1-0xA).
+  // Kein separates Feld noetig - der Wert IST die Stufe.
+  // level=0 -> HEATING_MODE_OFF (Lüfter aus)
+  heater->heating_mode = (level == 0) ? HeatingMode::HEATING_MODE_OFF
+                                       : static_cast<HeatingMode>(level);
 
   if (heater->energy_mix_a == EnergyMix::ENERGY_MIX_NONE) {
     heater->energy_mix_a = EnergyMix::ENERGY_MIX_GAS;
@@ -214,10 +217,7 @@ bool TrumaiNetBoxAppHeater::action_heater_ventilation_level(uint8_t level) {
 
   this->update_submit();
 
-  ESP_LOGW(TAG, "TEST: Lueftungsstufe %u angefordert (el_power_level_a=%u) - "
-                "beobachten: aendert sich die tatsaechliche Geblaesegeschwindigkeit? "
-                "Kommt eine 'invalid message'-Antwort zurueck?",
-           level, level);
+  ESP_LOGW(TAG, "TEST: Lueftungsstufe %u angefordert (heating_mode=0x%X)", level, level);
   return true;
 }
 
