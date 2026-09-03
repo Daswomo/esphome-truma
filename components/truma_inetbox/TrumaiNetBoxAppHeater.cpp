@@ -152,13 +152,6 @@ bool TrumaiNetBoxAppHeater::action_heater_electric_power_level(uint16_t value) {
   }
   auto heater = this->update_prepare();
 
-bool TrumaiNetBoxAppHeater::action_heater_ventilation_test() {
-  if (!this->can_update()) {
-    ESP_LOGW(TAG, "Cannot update Truma.");
-    return false;
-  }
-  auto heater = this->update_prepare();
-
   heater->el_power_level_a = decimal_to_el_power_level(value);
   if (heater->el_power_level_a != ElectricPowerLevel::ELECTRIC_POWER_LEVEL_0) {
     if (heater->energy_mix_a != EnergyMix::ENERGY_MIX_MIX &&
@@ -170,6 +163,61 @@ bool TrumaiNetBoxAppHeater::action_heater_ventilation_test() {
   }
 
   this->update_submit();
+  return true;
+}
+
+// ============================================================
+// EXPERIMENTELL: reiner Lüftermodus (siehe README-Abschnitt dazu)
+// ============================================================
+bool TrumaiNetBoxAppHeater::action_heater_ventilation_test() {
+  if (!this->can_update()) {
+    ESP_LOGW(TAG, "Cannot update Truma.");
+    return false;
+  }
+  auto heater = this->update_prepare();
+
+  // Temperatur bewusst auf OFF lassen (kein Heizbetrieb),
+  // aber heating_mode NICHT auf OFF zwingen:
+  heater->target_temp_room = TargetTemp::TARGET_TEMP_OFF;
+  heater->heating_mode = HeatingMode::HEATING_MODE_VENTILATION_TEST;
+
+  if (heater->energy_mix_a == EnergyMix::ENERGY_MIX_NONE) {
+    heater->energy_mix_a = EnergyMix::ENERGY_MIX_GAS;
+  }
+
+  this->update_submit();
+
+  ESP_LOGW(TAG, "TEST: reiner Lueftermodus angefordert (heating_mode=0x4) - "
+                "Log genau beobachten, ob eine 'invalid message'-Antwort kommt!");
+  return true;
+}
+
+bool TrumaiNetBoxAppHeater::action_heater_ventilation_level(uint8_t level) {
+  if (!this->can_update()) {
+    ESP_LOGW(TAG, "Cannot update Truma.");
+    return false;
+  }
+  if (level > 10) {
+    ESP_LOGW(TAG, "Ungueltige Stufe %u, erlaubt 0-10", level);
+    return false;
+  }
+  auto heater = this->update_prepare();
+
+  heater->target_temp_room = TargetTemp::TARGET_TEMP_OFF;
+  heater->heating_mode = HeatingMode::HEATING_MODE_VENTILATION_TEST;
+  // EXPERIMENTELL: roher Wert statt der drei definierten Konstanten
+  heater->el_power_level_a = static_cast<ElectricPowerLevel>(level);
+
+  if (heater->energy_mix_a == EnergyMix::ENERGY_MIX_NONE) {
+    heater->energy_mix_a = EnergyMix::ENERGY_MIX_GAS;
+  }
+
+  this->update_submit();
+
+  ESP_LOGW(TAG, "TEST: Lueftungsstufe %u angefordert (el_power_level_a=%u) - "
+                "beobachten: aendert sich die tatsaechliche Geblaesegeschwindigkeit? "
+                "Kommt eine 'invalid message'-Antwort zurueck?",
+           level, level);
   return true;
 }
 
